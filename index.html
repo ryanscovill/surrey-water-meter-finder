@@ -10,6 +10,7 @@
   <meta name="author" content="Ryan Scovill">
 
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 </head>
 
@@ -21,15 +22,22 @@
         <label for="accoutnum">Account #: </label>
         <input type="text" id="accountnum" class="input input-md">
       </div>
-      <label> <strong> <h3> OR </h3> </strong></label>
+      <label> <strong>
+          <h3> OR </h3>
+        </strong></label>
       <div class="form-group">
         <label for="addressInput">Address: </label>
         <input type="text" id="addressInput" class="input input-md">
       </div>
-      <div class="form-group margin-top-1">
-        <input type="submit" id="submit" value="Get Image" class="button"></input>
-      </div>
-    </form>
+      <div class="form-group form-submit">
+        <button type="submit" id="submit" value="Get Image" class="button">Get image</div>
+      </button>
+      <i id="loading-spinner" class="fa fa-spinner fa-spin" style="display: none;"></i>
+  </div>
+  <div id="error" style="display: none">
+    <p></p>
+  </div>
+  </form>
   </div>
   <div style="padding-top: 1em;">
     <div id="image-placeholder">
@@ -44,48 +52,66 @@
         e.preventDefault();
         accountNum = document.getElementById('accountnum').value;
         address = $('#addressInput').val();
-        $('#image-placeholder').html('')
-        if (accountNum) {
-          showImageAccountNum(accountNum);
-        } else {
-          showImage(address)
+
+        if (!$('#submit').hasClass("disabled")) {
+          if (accountNum || address) {
+            $('#image-placeholder').html('')
+            $("#submit").addClass("disabled")
+          }
+          $('#loading-spinner').show()
+          if (accountNum) {
+            showImageAccountNum(accountNum);
+          } else if (address) {
+            showImage(address)
+          }
         }
       }
       function showImageAccountNum(accountNum) {
         imgHtml = '<img class="meter-image" src="https://cosmos.surrey.ca/geo_ref/Images/Water/WaterMeterPhotos/' + accountNum + '.jpg" >';
-        html = "<div>"+imgHtml+"</div>"
+        html = "<div>" + imgHtml + "</div>"
         $('#image-placeholder').append(html)
+
       }
       function showImage(queryAddress) {
         // query for address
-        url = "https://cosmos.surrey.ca/external/COSMOSWebServices/cosmos.svc/GetSearchData/"+encodeURIComponent(queryAddress)+"?page=1&start=0&limit=25"
-          $.get(url, function (result){
-            // todo show address results and user chooses
-            addressId = result[0]["FieldValue"];
-            // get Address info
-            url = "https://gisservices.surrey.ca/arcgis/rest/services/Public/Legal/MapServer/find?f=json&searchText="+addressId+"&contains=false&returnGeometry=true&layers=0&searchFields=ADDRESSID"
-            $.get(url, function(result) {
-              houseNum = result.results[0].attributes["HOUSE NUMBER"]
-              x = result.results[0].geometry.x;
-              y = result.results[0].geometry.y;
-              padding = 50
-              boundingBox = {"xmin": x - 50, "ymin": y - 50, "xmax": x + 50, "ymax": y + 50}
-              boundingBoxParam = encodeURIComponent(JSON.stringify(boundingBox))
-              mapExtentParam = encodeURIComponent([boundingBox["xmin"],boundingBox["ymin"],boundingBox["xmax"],boundingBox["ymax"]].join(","))
-              url = "https://gisservices.surrey.ca/arcgis/rest/services/Public/Water/MapServer/identify?f=json&tolerance=5&returnGeometry=true&returnFieldName=false&returnUnformattedValues=false&imageDisplay=1011%2C888%2C96&geometry="+boundingBoxParam+"&geometryType=esriGeometryEnvelope&mapExtent="+mapExtentParam+"&layers=visible%3A1%2C2"
-              // get water services
-              $.get(url, function(result) {
-                //waterMeter = result.results[0].attributes
-                $('#image-placeholder').html('')
-                for (idx in result.results) {
-                  meter = result.results[idx]
-                  if(meter.hasOwnProperty('attributes') && meter.attributes.HOUSE == houseNum) {
-                    if (meter.attributes.hasOwnProperty('IMAGE') && meter.attributes.IMAGE.length > 1) {
-                      imgHtml = `<img class="meter-image" src="${meter.attributes.IMAGE}">`;
-                    } else {
-                      imgHtml = "<p> No image found </p>"
-                    }
-                    html = `
+        url = "https://cosmos.surrey.ca/external/COSMOSWebServices/cosmos.svc/GetSearchData/" + encodeURIComponent(queryAddress) + "?page=1&start=0&limit=25"
+        $.get(url, function (result) {
+          if (result.length == 0) {
+            showError("Could not find property.")
+            return
+          }
+          // todo show address results and user chooses
+          addressId = result[0]["FieldValue"];
+          // get Address info
+          url = "https://gisservices.surrey.ca/arcgis/rest/services/Public/Legal/MapServer/find?f=json&searchText=" + addressId + "&contains=false&returnGeometry=true&layers=0&searchFields=ADDRESSID"
+          $.get(url, function (result) {
+            if (result.resultslength == 0) {
+              showError("Could not find property details.")
+              return
+            }
+            houseNum = result.results[0].attributes["HOUSE NUMBER"]
+            x = result.results[0].geometry.x;
+            y = result.results[0].geometry.y;
+            padding = 50
+            boundingBox = { "xmin": x - 50, "ymin": y - 50, "xmax": x + 50, "ymax": y + 50 }
+            boundingBoxParam = encodeURIComponent(JSON.stringify(boundingBox))
+            mapExtentParam = encodeURIComponent([boundingBox["xmin"], boundingBox["ymin"], boundingBox["xmax"], boundingBox["ymax"]].join(","))
+            url = "https://gisservices.surrey.ca/arcgis/rest/services/Public/Water/MapServer/identify?f=json&tolerance=5&returnGeometry=true&returnFieldName=false&returnUnformattedValues=false&imageDisplay=1011%2C888%2C96&geometry=" + boundingBoxParam + "&geometryType=esriGeometryEnvelope&mapExtent=" + mapExtentParam + "&layers=visible%3A1%2C2"
+            // get water services
+            $.get(url, function (result) {
+              $('#image-placeholder').html('')
+              disableSpinner()
+              foundMeter = false;
+              for (idx in result.results) {
+                meter = result.results[idx]
+                if (meter.hasOwnProperty('attributes') && meter.attributes.HOUSE == houseNum) {
+                  foundMeter = true;
+                  if (meter.attributes.hasOwnProperty('IMAGE') && meter.attributes.IMAGE.length > 1) {
+                    imgHtml = `<img class="meter-image" src="${meter.attributes.IMAGE}">`;
+                  } else {
+                    imgHtml = "<p> No image found </p>"
+                  }
+                  html = `
                     <div class="card">
                       ${imgHtml}
                       <p>Meter Account: ${meter.attributes["ACCOUNT NUMBER"]}</p>
@@ -94,12 +120,36 @@
                       <p>Location Description: ${meter.attributes["LOCATION DESCRIPTION"]}</p>
                     </div>
                       `
-                    $('#image-placeholder').append(html)
-                  }
-                };
-              })
-            });
+                  $('#image-placeholder').append(html)
+                }
+              }
+              if (!foundMeter) {
+                showError("Could not find a meter at this property.");
+              }
+            }).fail(function () {
+              showError();
+            })
+          }).fail(function () {
+            showError();
+          })
+        }).fail(function () {
+          showError();
         })
+      }
+
+      function showError(message) {
+        defaultMessage = "An error occurred.  Please try using an account #."
+        if (!message) {
+          message = defaultMessage;
+        }
+        $('#error').show();
+        $('#error p').text(message);
+        disableSpinner();
+      }
+
+      function disableSpinner() {
+        $("#submit").removeClass("disabled")
+        $('#loading-spinner').hide()
       }
     })
   </script>
