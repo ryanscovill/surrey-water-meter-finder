@@ -9,8 +9,10 @@
   <meta name="description" content="Find City of Surrey Water Meter">
   <meta name="author" content="Ryan Scovill">
 
-  <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@7.2.0/dist/css/autoComplete.min.css">
+  <link rel="stylesheet" href="css/styles.css">
 
 </head>
 
@@ -27,17 +29,17 @@
         </strong></label>
       <div class="form-group">
         <label for="addressInput">Address: </label>
-        <input type="text" id="addressInput" class="input input-md">
+        <input type="text" id="addressInput" class="input input-md" autocomplete="off">
       </div>
       <div class="form-group form-submit">
         <button type="submit" id="submit" value="Get Image" class="button">Get image</button>
-      <i id="loading-spinner" class="fa fa-spinner fa-spin" style="display: none;"></i>
-    </div>
+        <i id="loading-spinner" class="fa fa-spinner fa-spin" style="display: none;"></i>
+      </div>
       <div id="error" style="display: none">
         <p></p>
       </div>
   </div>
-  
+
   </form>
   </div>
   <div style="padding-top: 1em;">
@@ -46,6 +48,7 @@
 
   </div>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@7.2.0/dist/js/autoComplete.min.js"></script>
   <script>
     $(document).ready(function () {
 
@@ -70,7 +73,8 @@
       function showImageAccountNum(accountNum) {
         imgHtml = '<img class="meter-image" src="https://cosmos.surrey.ca/geo_ref/Images/Water/WaterMeterPhotos/' + accountNum + '.jpg" >';
         html = "<div>" + imgHtml + "</div>"
-        $('#image-placeholder').append(html)
+        $('#image-placeholder').append(html);
+        disableSpinner();
 
       }
       function showImage(queryAddress) {
@@ -84,7 +88,7 @@
           // todo show address results and user chooses
           addressId = result[0]["FieldValue"];
           // get Address info
-          url = "https://gisservices.surrey.ca/arcgis/rest/services/Public/Legal/MapServer/find?f=json&searchText=" + addressId + "&contains=false&returnGeometry=true&layers=0&searchFields=ADDRESSID"
+          url = "https://gisservices.surrey.ca/arcgis/rest/services/Public/Legal/MapServer/find?f=json&searchText=" + encodeURIComponent(addressId) + "&contains=false&returnGeometry=true&layers=0&searchFields=ADDRESSID"
           $.get(url, function (result) {
             if (!result.hasOwnProperty('results') || result.results.length == 0) {
               showError("Could not find property details.")
@@ -155,6 +159,48 @@
         $('#loading-spinner').hide()
       }
     })
+
+    new autoComplete({
+      data: {
+        src: async () => {
+          const query = document.querySelector("#addressInput").value;
+          const url = "https://cosmos.surrey.ca/external/COSMOSWebServices/cosmos.svc/GetSearchData/" + encodeURIComponent(query) + "?page=1&start=0&limit=5"
+          const source = await fetch(url);
+          const data = await source.json();
+          const data2 = data.filter(row => row["ListValue"].endsWith(" - Address"))
+          const data3 = data2.map(row => row["ListValue"].slice(0, -10))
+          return data3;
+        },
+        cache: false
+      },
+      selector: "#addressInput",
+      threshold: 2,
+      debounce: 300,
+      searchEngine: "loose",
+      resultsList: {
+        render: true,
+        /* if set to false, add an eventListener to the selector for event type
+           "autoComplete" to handle the result */
+        container: source => {
+          source.setAttribute("id", "address_results");
+        },
+        destination: document.querySelector("#addressInput"),
+        position: "afterend",
+        element: "ul"
+      },
+      maxResults: 5,
+      highlight: true,
+      resultItem: {
+        content: (data, source) => {
+          source.innerHTML = data.match;
+        },
+        element: "li"
+      },
+      onSelection: selected => {
+        $('#addressInput').val(selected.selection.value);
+      }
+    });
+
   </script>
 </body>
 

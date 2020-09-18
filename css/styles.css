@@ -89,3 +89,30 @@ body {
   .form {
     margin-left: 1rem;
   }
+
+  #address_results {
+    margin: 0 0 0 45px;
+    position: absolute;
+    z-index: 999;
+  }
+
+  .autoComplete_highlighted {
+    color: #689133;
+  }
+
+  .autoComplete_result {
+    min-width: 330px;
+    max-width: 330px;
+    margin: 0;
+  }
+
+  .autoComplete_result:hover {
+    background-color: #bfe4bbf1;
+  }
+
+  .autoComplete_result:hover {
+    border-top: .05rem solid #e3e3e3;
+    border-bottom: .05rem solid #e3e3e3;
+    border-left: 2px solid #689133;
+    border-right: 2px solid #689133;
+  }
