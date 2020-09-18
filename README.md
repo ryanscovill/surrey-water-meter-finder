@@ -1,6 +1,6 @@
-# City of Surrey Water Meter Finder
+# City of Surrey Water Meter Locator
 
-Source of https://ryanscovill.github.io/surrey-water-meter-finder/
+Source of https://ryanscovill.github.io/surrey-water-meter-locator/
 
 ## Notice
 
