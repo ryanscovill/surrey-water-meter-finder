@@ -8,6 +8,7 @@
   <title>City of Surrey - Water Meter Finder</title>
   <meta name="description" content="Find City of Surrey Water Meter">
   <meta name="author" content="Ryan Scovill">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet"
@@ -17,36 +18,40 @@
 </head>
 
 <body>
-  <div class="form">
-    <h1>City of Surrey Water Meter Finder</h1>
-    <form id="form">
-      <div class="form-group">
-        <label for="accoutnum">Account #: </label>
-        <input type="text" id="accountnum" class="input input-md">
-      </div>
-      <label> <strong>
-          <h3> OR </h3>
-        </strong></label>
-      <div class="form-group">
-        <label for="addressInput">Address: </label>
-        <input type="text" id="addressInput" class="input input-md" autocomplete="off">
-      </div>
-      <div class="form-group form-submit">
-        <button type="submit" id="submit" value="Get Image" class="button">Get image</button>
-        <i id="loading-spinner" class="fa fa-spinner fa-spin" style="display: none;"></i>
-      </div>
-      <div id="error" style="display: none">
-        <p></p>
-      </div>
-  </div>
-
-  </form>
-  </div>
-  <div style="padding-top: 1em;">
-    <div id="image-placeholder">
+  <div class="container">
+    <div class="form">
+      <h1>City of Surrey Water Meter Finder</h1>
+      <form id="form">
+        <div class="form-group">
+          <label for="accoutnum">Account #: </label>
+          <input type="text" id="accountnum" class="input input-md">
+        </div>
+        <label> <strong>
+            <h3> OR </h3>
+          </strong></label>
+        <div class="form-group">
+          <label for="addressInput">Address: </label>
+          <input type="text" id="addressInput" class="input input-md" autocomplete="off">
+        </div>
+        <div class="form-group form-submit">
+          <button type="submit" id="submit" value="Get Image" class="button">Get image</button>
+          <i id="loading-spinner" class="fa fa-spinner fa-spin" style="display: none;"></i>
+        </div>
+        <div id="error" style="display: none">
+          <p></p>
+        </div>
+      </form>
     </div>
+    <div style="padding-top: 1em;">
+      <div id="image-placeholder"></div>
 
+    </div>
   </div>
+
+  <footer>
+    <p><a href="https://github.com/ryanscovill/surrey-water-meter-finder"><i class="fa fa-github"></i></a> | Note: This tool is not endorsed by the City of Surrey and is for educational purposes only.</p>
+  </footer>
+
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@7.2.0/dist/js/autoComplete.min.js"></script>
   <script>
@@ -62,11 +67,13 @@
             $('#image-placeholder').html('')
             $("#submit").addClass("disabled")
           }
-          $('#loading-spinner').show()
+          $('#loading-spinner').show();
           if (accountNum) {
             showImageAccountNum(accountNum);
           } else if (address) {
             showImage(address)
+          } else {
+            $('#loading-spinner').hide();
           }
         }
       }
