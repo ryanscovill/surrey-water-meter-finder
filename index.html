@@ -30,13 +30,14 @@
         <input type="text" id="addressInput" class="input input-md">
       </div>
       <div class="form-group form-submit">
-        <button type="submit" id="submit" value="Get Image" class="button">Get image</div>
-      </button>
+        <button type="submit" id="submit" value="Get Image" class="button">Get image</button>
       <i id="loading-spinner" class="fa fa-spinner fa-spin" style="display: none;"></i>
+    </div>
+      <div id="error" style="display: none">
+        <p></p>
+      </div>
   </div>
-  <div id="error" style="display: none">
-    <p></p>
-  </div>
+  
   </form>
   </div>
   <div style="padding-top: 1em;">
@@ -85,7 +86,7 @@
           // get Address info
           url = "https://gisservices.surrey.ca/arcgis/rest/services/Public/Legal/MapServer/find?f=json&searchText=" + addressId + "&contains=false&returnGeometry=true&layers=0&searchFields=ADDRESSID"
           $.get(url, function (result) {
-            if (result.resultslength == 0) {
+            if (!result.hasOwnProperty('results') || result.results.length == 0) {
               showError("Could not find property details.")
               return
             }
@@ -125,6 +126,8 @@
               }
               if (!foundMeter) {
                 showError("Could not find a meter at this property.");
+              } else {
+                $('#error').hide()
               }
             }).fail(function () {
               showError();
