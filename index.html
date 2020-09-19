@@ -37,6 +37,7 @@
         <div class="form-group form-submit">
           <button type="submit" id="submit" value="Get Image" class="button">Locate</button>
           <i id="loading-spinner" class="fa fa-spinner fa-spin" style="display: none;"></i>
+          <button id="helpBtn" class="button button-light" type="button">Help</button>
         </div>
         <div id="error" style="display: none">
           <p></p>
@@ -45,6 +46,24 @@
     </div>
     <div style="padding-top: 1em;">
       <div id="result-placeholder"></div>
+    </div>
+
+
+    <div id="helpModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <span class="close">&times;</span>
+          <h2>Help</h2>
+        </div>
+        <div class="modal-body">
+          <p>1. Enter your home address or account number.</p>
+          <p>2. A map and photo will show your water meter location.  The meter is under the orange traffic cone.</p>
+          <p>The meter looks similar to this example: </p>
+          <img src="images/water-meter-example.jpg">
+          <p>If the meter is not found with this tool, contact the City of Surrey for help.</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -60,4 +79,5 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDPvO0_CPRyZ6b4CNHYTaQ6lVSvgx4KX28">
   </script>
 </body>
+
 </html>
