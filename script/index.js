@@ -6,7 +6,7 @@ $(document).ready(function () {
 
       if (!$('#submit').hasClass("disabled")) {
         if (accountNum || address) {
-          $('#image-placeholder').html('')
+          $('#result-placeholder').html('')
           $("#submit").addClass("disabled")
         }
         $('#loading-spinner').show();
@@ -59,35 +59,42 @@ $(document).ready(function () {
 
     function getWaterService(url, houseNum = null) {
       $.get(url, function (result) {
-        $('#image-placeholder').html('')
+        $('#result-placeholder').html('')
         disableSpinner()
-        foundMeter = false;
+        let foundMeter = false;
         for (idx in result.results) {
-          meter = result.results[idx]
-          validEntry = meter.hasOwnProperty('attributes');
+          let meter = result.results[idx]
+          let validEntry = meter.hasOwnProperty('attributes');
           if (validEntry && houseNum != null) {
             validEntry = meter.attributes.HOUSE == houseNum;
           }
-          if (validEntry && meter.attributes["ACCOUNT NUMBER"]) {
+          var accountNum = meter.attributes["ACCOUNT NUMBER"]
+          if (validEntry && accountNum) {
             foundMeter = true;
             if (meter.attributes.hasOwnProperty('IMAGE') && meter.attributes.IMAGE.length > 1) {
-              imgHtml = `<img class="meter-image" src="${meter.attributes.IMAGE}">`;
+              var imgHtml = `<img class="meter-image" src="${meter.attributes.IMAGE}">`;
             } else {
-              imgHtml = "<p> No image found </p>"
+              var imgHtml = "<p> No image found </p>"
             }
-            address = meter.attributes["HOUSE"] + " " + meter.attributes["STREET"]
-            html = `
+            let mapHtml = `
+            <div id="map-${accountNum}" class="map"></div>
+            `
+            let address = meter.attributes["HOUSE"] + " " + meter.attributes["STREET"]
+            let html = `
                   <div class="card">
+                    ${mapHtml}
                     ${imgHtml}
                     <p>Address: ${address}</p>
-                    <p>Meter Account: ${meter.attributes["ACCOUNT NUMBER"]}</p>
+                    <p>Meter Account: ${accountNum}</p>
                     <p>Installed Date: ${meter.attributes["INSTALLED DATE"]}</p>
                     <p>Last Read: ${meter.attributes["LAST READ"]}</p>
                     <p>Last Read Date: ${meter.attributes["LAST READ DATE"]}</p>
                     <p>Location Description: ${meter.attributes["LOCATION DESCRIPTION"]}</p>
                   </div>
                     `
-            $('#image-placeholder').append(html)
+            $('#result-placeholder').append(html)
+            coordinates = proj4("+proj=utm +zone=10","+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs",[meter.geometry.x, meter.geometry.y]);
+            initMap("map-"+accountNum, coordinates[1], coordinates[0]);
           }
         }
         if (!foundMeter) {
@@ -156,3 +163,14 @@ $(document).ready(function () {
       $('#addressInput').val(selected.selection.value);
     }
   });
+
+// Initialize and add the map
+function initMap(id, lat, lng) {
+  // The location of Uluru
+  var uluru = {lat: lat, lng: lng};
+  // The map, centered at Uluru
+  var map = new google.maps.Map(
+      document.getElementById(id), {zoom: 20, center: uluru, mapTypeId: 'satellite'});
+  // The marker, positioned at Uluru
+  var marker = new google.maps.Marker({position: uluru, map: map});
+}
